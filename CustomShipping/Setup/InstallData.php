@@ -1,20 +1,34 @@
 <?php
 namespace PWC\CustomShipping\Setup;
 
-use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\Setup\InstallDataInterface;
 use Magento\Framework\Setup\ModuleContextInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 
+use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
+use Magento\Catalog\Model\ResourceModel\Product\Action;
+
 class InstallData implements InstallDataInterface
 {
-	private $eavSetupFactory;
+	 /** @var EavSetupFactory  */
+	 private $eavSetupFactory;
 
-	public function __construct(EavSetupFactory $eavSetupFactory)
-	{
-		$this->eavSetupFactory = $eavSetupFactory;
-	}
+	 /** @var CollectionFactory  */
+	 private $collectionFactory;
+ 
+	 /** @var Action  */
+	 private $action;
+
+	public function __construct(
+        EavSetupFactory $eavSetupFactory,
+        CollectionFactory $collectionFactory,
+        Action $action
+    ) {
+        $this->eavSetupFactory = $eavSetupFactory;
+        $this->collectionFactory = $collectionFactory;
+        $this->action = $action;
+    }
 	
 	public function install(ModuleDataSetupInterface $setup, ModuleContextInterface $context)
 	{
@@ -32,9 +46,9 @@ class InstallData implements InstallDataInterface
 				'source' => 'PWC\CustomShipping\Model\Options',
 				'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
 				'visible' => true,
-				'required' => true,
+				'required' => false,
 				'user_defined' => false,
-				'default' => '',
+				'default' => null,
 				'searchable' => false,
 				'filterable' => false,
 				'comparable' => false,
@@ -44,5 +58,8 @@ class InstallData implements InstallDataInterface
 				'apply_to' => ''
 			]
 		);
+		//set default value for the new custom attribute
+        $productIds = $this->collectionFactory->create()->getAllIds();
+        $this->action->updateAttributes($productIds, ['product_shipping_type' => null], 0);
 	}
 }
